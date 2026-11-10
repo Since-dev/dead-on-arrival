@@ -1,0 +1,68 @@
+{
+  "note": "The models a run covers. `guardInput` and `guardOutput` are USD per million tokens: one and a half times the list prices models.dev gave on 2026-11-10. They are not a price list, only what a run counts with so it stops before --max-usd is spent. A model is run when its provider has an adapter in src/providers and its key is set.",
+  "models": [
+    {
+      "id": "claude-haiku-5-5",
+      "provider": "anthropic",
+      "name": "Claude Haiku 5.5",
+      "guardInput": 0.15,
+      "guardOutput": 0.75
+    },
+    {
+      "id": "claude-sonnet-5-5",
+      "provider": "anthropic",
+      "name": "Claude Sonnet 5.5",
+      "guardInput": 3.0,
+      "guardOutput": 15.0
+    },
+    {
+      "id": "claude-opus-5-5",
+      "provider": "anthropic",
+      "name": "Claude Opus 5.5",
+      "guardInput": 6.0,
+      "guardOutput": 30.0
+    },
+    {
+      "id": "claude-fable-5-2",
+      "provider": "anthropic",
+      "name": "Claude Fable 5.2",
+      "guardInput": 12.0,
+      "guardOutput": 60.0
+    },
+    {
+      "id": "gpt-6.1-sol",
+      "provider": "openai",
+      "name": "GPT-6.1 Sol",
+      "guardInput": 3.0,
+      "guardOutput": 15.0
+    },
+    {
+      "id": "gpt-6.1-terra",
+      "provider": "openai",
+      "name": "GPT-6.1 Terra",
+      "guardInput": 1.5,
+      "guardOutput": 7.5
+    },
+    {
+      "id": "gpt-6-luna",
+      "provider": "openai",
+      "name": "GPT-6 Luna",
+      "guardInput": 0.15,
+      "guardOutput": 0.75
+    },
+    {
+      "id": "gemini-4-carbon",
+      "provider": "google",
+      "name": "Gemini 4 Carbon",
+      "guardInput": 3.0,
+      "guardOutput": 15.0
+    },
+    {
+      "id": "gemini-3.8-flash",
+      "provider": "google",
+      "name": "Gemini 3.8 Flash",
+      "guardInput": 1.125,
+      "guardOutput": 5.625
+    }
+  ]
+}

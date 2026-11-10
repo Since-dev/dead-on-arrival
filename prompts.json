@@ -1,0 +1,302 @@
+[
+  {
+    "id": "claude-01",
+    "area": "claude",
+    "prompt": "Write a Python function that summarizes a customer support ticket in three bullet points using the Anthropic SDK."
+  },
+  {
+    "id": "claude-02",
+    "area": "claude",
+    "prompt": "Add a streaming chat endpoint to an Express app in TypeScript that proxies to Claude with the Anthropic SDK."
+  },
+  {
+    "id": "claude-03",
+    "area": "claude",
+    "prompt": "Write a Python script that classifies each line of a CSV of product reviews as positive, negative or neutral with Claude."
+  },
+  {
+    "id": "claude-04",
+    "area": "claude",
+    "prompt": "Write a TypeScript helper that asks Claude to extract an invoice's total, date and vendor as JSON, using tool use."
+  },
+  {
+    "id": "claude-05",
+    "area": "claude",
+    "prompt": "Write a small Python CLI that sends a prompt from stdin to Claude and prints the answer as it streams."
+  },
+  {
+    "id": "claude-06",
+    "area": "claude",
+    "prompt": "Write a Go function that calls the Claude API over HTTP and returns the reply text."
+  },
+  {
+    "id": "claude-07",
+    "area": "claude",
+    "prompt": "Write a Python function that asks Claude to describe an image file on disk."
+  },
+  {
+    "id": "claude-08",
+    "area": "claude",
+    "prompt": "Write a Node.js script that runs a batch of 100 prompts through Claude with the Message Batches API."
+  },
+  {
+    "id": "claude-09",
+    "area": "claude",
+    "prompt": "Write a Ruby script that asks Claude to translate a paragraph into Spanish."
+  },
+  {
+    "id": "claude-10",
+    "area": "claude",
+    "prompt": "Write a Python function that counts the tokens of a prompt before sending it to Claude."
+  },
+  {
+    "id": "openai-01",
+    "area": "openai",
+    "prompt": "Write a Python function that answers a question about a document using the OpenAI SDK."
+  },
+  {
+    "id": "openai-02",
+    "area": "openai",
+    "prompt": "Add an endpoint to a FastAPI app that returns a chat completion from OpenAI as a streamed response."
+  },
+  {
+    "id": "openai-03",
+    "area": "openai",
+    "prompt": "Write a TypeScript function that gets a structured JSON answer from an OpenAI model using a JSON schema."
+  },
+  {
+    "id": "openai-04",
+    "area": "openai",
+    "prompt": "Write a Python script that creates embeddings for a list of sentences with OpenAI and saves them to a file."
+  },
+  {
+    "id": "openai-05",
+    "area": "openai",
+    "prompt": "Write a Node.js script that transcribes an audio file with OpenAI."
+  },
+  {
+    "id": "openai-06",
+    "area": "openai",
+    "prompt": "Write a Python function that generates an image from a prompt with OpenAI and saves it as a PNG."
+  },
+  {
+    "id": "openai-07",
+    "area": "openai",
+    "prompt": "Write a TypeScript function that lets an OpenAI model call a get_weather tool and returns the final answer."
+  },
+  {
+    "id": "openai-08",
+    "area": "openai",
+    "prompt": "Write a Python script that turns a text file into speech with OpenAI and writes an MP3."
+  },
+  {
+    "id": "openai-09",
+    "area": "openai",
+    "prompt": "Write a Go function that calls the OpenAI API over HTTP for a chat completion."
+  },
+  {
+    "id": "openai-10",
+    "area": "openai",
+    "prompt": "Write a Python function that asks an OpenAI reasoning model to solve a scheduling puzzle."
+  },
+  {
+    "id": "gemini-01",
+    "area": "gemini",
+    "prompt": "Write a Python function that summarizes a PDF with the Gemini API."
+  },
+  {
+    "id": "gemini-02",
+    "area": "gemini",
+    "prompt": "Write a TypeScript function that answers a question with the Gemini API using the Google Gen AI SDK."
+  },
+  {
+    "id": "gemini-03",
+    "area": "gemini",
+    "prompt": "Write a Python script that transcribes an audio file with the Gemini API."
+  },
+  {
+    "id": "gemini-04",
+    "area": "gemini",
+    "prompt": "Write a Node.js script that creates embeddings for a list of strings with the Gemini API."
+  },
+  {
+    "id": "gemini-05",
+    "area": "gemini",
+    "prompt": "Write a Python function that generates an image with the Gemini API and saves it."
+  },
+  {
+    "id": "gemini-06",
+    "area": "gemini",
+    "prompt": "Write a Python script that turns a paragraph into speech with the Gemini API."
+  },
+  {
+    "id": "gemini-07",
+    "area": "gemini",
+    "prompt": "Write a Go function that calls the Gemini API over HTTP and returns the reply."
+  },
+  {
+    "id": "gemini-08",
+    "area": "gemini",
+    "prompt": "Write a Python function that asks Gemini to return a JSON list of the action items in a meeting transcript."
+  },
+  {
+    "id": "cloud-01",
+    "area": "cloud",
+    "prompt": "Write a Python function that calls Claude on Amazon Bedrock with boto3 and the Converse API."
+  },
+  {
+    "id": "cloud-02",
+    "area": "cloud",
+    "prompt": "Write a TypeScript function that calls a Claude model on Amazon Bedrock with the AWS SDK for JavaScript v3."
+  },
+  {
+    "id": "cloud-03",
+    "area": "cloud",
+    "prompt": "Write a Python function that calls a chat model on Azure OpenAI with the OpenAI SDK."
+  },
+  {
+    "id": "cloud-04",
+    "area": "cloud",
+    "prompt": "Write a Python function that calls Gemini on Vertex AI with the Google Gen AI SDK."
+  },
+  {
+    "id": "cloud-05",
+    "area": "cloud",
+    "prompt": "Write a Python function that calls Claude on Vertex AI with the Anthropic SDK."
+  },
+  {
+    "id": "cloud-06",
+    "area": "cloud",
+    "prompt": "Write a Python function that creates text embeddings on Amazon Bedrock with boto3."
+  },
+  {
+    "id": "cloud-07",
+    "area": "cloud",
+    "prompt": "Write a Terraform snippet that grants an IAM role access to invoke one Claude model on Amazon Bedrock."
+  },
+  {
+    "id": "cloud-08",
+    "area": "cloud",
+    "prompt": "Write a Python function that calls a Mistral model on Amazon Bedrock with boto3."
+  },
+  {
+    "id": "mistral-01",
+    "area": "mistral",
+    "prompt": "Write a Python function that answers a question with the Mistral API using the mistralai SDK."
+  },
+  {
+    "id": "mistral-02",
+    "area": "mistral",
+    "prompt": "Write a TypeScript function that completes code with a Mistral code model."
+  },
+  {
+    "id": "mistral-03",
+    "area": "mistral",
+    "prompt": "Write a Python script that creates embeddings with the Mistral API."
+  },
+  {
+    "id": "mistral-04",
+    "area": "mistral",
+    "prompt": "Write a Node.js script that asks a Mistral model to moderate a list of comments."
+  },
+  {
+    "id": "npm-01",
+    "area": "npm",
+    "prompt": "Write the package.json for a new Next.js app with Tailwind CSS, NextAuth and Stripe. Pin exact versions."
+  },
+  {
+    "id": "npm-02",
+    "area": "npm",
+    "prompt": "Write the package.json for an Express API in TypeScript with Zod validation, Prisma and Jest. Pin exact versions."
+  },
+  {
+    "id": "npm-03",
+    "area": "npm",
+    "prompt": "Write the package.json for a React single-page app built with Vite, React Router and TanStack Query. Pin exact versions."
+  },
+  {
+    "id": "npm-04",
+    "area": "npm",
+    "prompt": "Write the package.json for a Node.js CLI tool using Commander, Chalk and Inquirer. Pin exact versions."
+  },
+  {
+    "id": "npm-05",
+    "area": "npm",
+    "prompt": "Write the package.json for a NestJS service with TypeORM, Passport and class-validator. Pin exact versions."
+  },
+  {
+    "id": "npm-06",
+    "area": "npm",
+    "prompt": "Write the package.json for a chatbot backend that uses the Vercel AI SDK with OpenAI and Anthropic providers. Pin exact versions."
+  },
+  {
+    "id": "npm-07",
+    "area": "npm",
+    "prompt": "Write the package.json for a LangChain.js agent that uses OpenAI and a Pinecone vector store. Pin exact versions."
+  },
+  {
+    "id": "npm-08",
+    "area": "npm",
+    "prompt": "Write the package.json for an Electron app with React and electron-builder. Pin exact versions."
+  },
+  {
+    "id": "npm-09",
+    "area": "npm",
+    "prompt": "Write the package.json for a library published to npm, built with tsup and tested with Vitest. Pin exact versions."
+  },
+  {
+    "id": "npm-10",
+    "area": "npm",
+    "prompt": "Write the package.json for a Remix app with Drizzle ORM and Postgres. Pin exact versions."
+  },
+  {
+    "id": "pypi-01",
+    "area": "pypi",
+    "prompt": "Write the requirements.txt for a FastAPI service with SQLAlchemy, Pydantic and Alembic. Pin exact versions."
+  },
+  {
+    "id": "pypi-02",
+    "area": "pypi",
+    "prompt": "Write the requirements.txt for a Django project with Django REST framework, Celery and Redis. Pin exact versions."
+  },
+  {
+    "id": "pypi-03",
+    "area": "pypi",
+    "prompt": "Write the requirements.txt for a data notebook with pandas, NumPy, scikit-learn and Matplotlib. Pin exact versions."
+  },
+  {
+    "id": "pypi-04",
+    "area": "pypi",
+    "prompt": "Write the requirements.txt for a LangChain agent that uses OpenAI and Chroma. Pin exact versions."
+  },
+  {
+    "id": "pypi-05",
+    "area": "pypi",
+    "prompt": "Write the requirements.txt for a Flask app with Flask-Login, Flask-SQLAlchemy and Gunicorn. Pin exact versions."
+  },
+  {
+    "id": "pypi-06",
+    "area": "pypi",
+    "prompt": "Write the requirements.txt for a scraper with Requests, Beautiful Soup and lxml. Pin exact versions."
+  },
+  {
+    "id": "pypi-07",
+    "area": "pypi",
+    "prompt": "Write the requirements.txt for a retrieval app with LlamaIndex, the Anthropic SDK and Qdrant. Pin exact versions."
+  },
+  {
+    "id": "pypi-08",
+    "area": "pypi",
+    "prompt": "Write the requirements.txt for a PyTorch training script with Transformers, Datasets and Accelerate. Pin exact versions."
+  },
+  {
+    "id": "pypi-09",
+    "area": "pypi",
+    "prompt": "Write the requirements.txt for a Streamlit dashboard that reads from Postgres with psycopg. Pin exact versions."
+  },
+  {
+    "id": "pypi-10",
+    "area": "pypi",
+    "prompt": "Write the requirements.txt for a Discord bot that answers with the OpenAI SDK. Pin exact versions."
+  }
+]

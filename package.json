@@ -1,0 +1,21 @@
+{
+  "name": "dead-on-arrival",
+  "version": "0.1.0",
+  "private": true,
+  "description": "A benchmark: how often does a coding model write code that is already retired, or about to be, on the day it writes it?",
+  "license": "MIT",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "test": "node --test test.mjs",
+    "bench": "node src/run.mjs",
+    "report": "node src/report.mjs"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.126.0",
+    "@google/genai": "^3.0.0",
+    "openai": "^7.55.0"
+  }
+}
