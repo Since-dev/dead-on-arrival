@@ -1,5 +1,7 @@
 {
-  "note": "The models a run covers. `guardInput` and `guardOutput` are USD per million tokens: one and a half times the list prices models.dev gave on 2026-11-10. They are not a price list, only what a run counts with so it stops before --max-usd is spent. A model is run when its provider has an adapter in src/providers and its key is set.",
+  "note": "The models a run covers. `guardInput` and `guardOutput` are USD per million tokens: `guardFactor` times the list prices models.dev gave on `pricedOn`. A run counts with them so it stops before --max-usd is spent; the report divides by `guardFactor` to say what an answer cost at list prices. A model is run when its provider has an adapter in src/providers and its key is set.",
+  "guardFactor": 1.5,
+  "pricedOn": "2026-11-10",
   "models": [
     {
       "id": "claude-haiku-5-5",

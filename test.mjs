@@ -2,7 +2,7 @@ import assert from "node:assert/strict"
 import { test } from "node:test"
 
 import { blocksOf, findingOf, fold, judge, PAGES_MAX, verdictOf } from "./src/judge.mjs"
-import { leaderboard, siteData, summarize } from "./src/report.mjs"
+import { leaderboard, siteData, summarize, usd } from "./src/report.mjs"
 import { digest, TOOLS } from "./src/since.mjs"
 import { complete as claude } from "./src/providers/anthropic.mjs"
 import { complete as gemini } from "./src/providers/google.mjs"
@@ -147,7 +147,28 @@ test("the leaderboard's rates are over judged answers only, bare first, then eac
   const site = siteData(rows, { day: "2026-11-24", prompts: ["p1", "p2"], modelNames: [{ id: "a", name: "Model A", provider: "x" }] })
   assert.deepEqual([site.day, site.prompts, site.models], ["2026-11-24", 2, [{ id: "a", name: "Model A", provider: "x" }, { id: "b", name: "b", provider: null }]])
   assert.deepEqual(site.rows.find((entry) => entry.model === "a" && entry.mode === "bare"),
-    { model: "a", mode: "bare", answers: 4, judged: 2, dead: 1, dying: 0, vulnerable: 0, behind: 0, clean: 1, unjudged: 1, errors: 1, toolCalls: 0, deadRate: 50, deadOrDyingRate: 50, vulnerableRate: 0 })
+    { model: "a", mode: "bare", answers: 4, judged: 2, dead: 1, dying: 0, vulnerable: 0, behind: 0, clean: 1, unjudged: 1, errors: 1, toolCalls: 0, deadRate: 50, deadOrDyingRate: 50, vulnerableRate: 0, tokensPerAnswer: null, usdPerAnswer: null })
+})
+
+test("a row says what an answer took in tokens, and at list prices what it cost, with Since and without", () => {
+  const answers = [
+    { model: "a", mode: "bare", verdict: "dead", usage: { inputTokens: 100, outputTokens: 900 } }, { model: "a", mode: "bare", verdict: "clean", usage: { inputTokens: 100, outputTokens: 1_100 } },
+    // A failed call used nothing that was counted, and is left out of the average.
+    { model: "a", mode: "bare", verdict: "error" },
+    { model: "a", mode: "since", verdict: "clean", usage: { inputTokens: 20_000, outputTokens: 2_000 }, toolCalls: [{}] },
+  ]
+  const rows = summarize(answers, { a: { input: 1, output: 5 } })
+  const row = (mode) => rows.find((entry) => entry.mode === mode)
+  assert.deepEqual([row("bare").tokensPerAnswer, row("bare").usdPerAnswer], [1_100, 0.0051])
+  assert.deepEqual([row("since").tokensPerAnswer, row("since").usdPerAnswer], [22_000, 0.03])
+  assert.deepEqual([usd(0.564), usd(0.0888), usd(0.0026), usd(null)], ["$0.56", "$0.089", "$0.0026", "n/a"])
+  const page = leaderboard(rows, { day: "2026-11-24", pricedOn: "2026-11-10", prompts: ["p1"], modelNames: [{ id: "a", name: "Model A" }] })
+  assert.ok(page.includes("## What the tools cost"))
+  assert.ok(page.includes("list prices on 2026-11-10"))
+  assert.ok(page.includes("| Model A | 1,100 | 22,000 | $0.0051 | $0.030 |"))
+  assert.equal(siteData(rows, { day: "2026-11-24", pricedOn: "2026-11-10", prompts: ["p1"], modelNames: [] }).pricedOn, "2026-11-10")
+  // With no prices there is no cost, and no cost table.
+  assert.equal(leaderboard(summarize(answers), { day: "2026-11-24", prompts: ["p1"], modelNames: [] }).includes("What the tools cost"), false)
 })
 
 // Each provider's client, answering from a script in the shape its SDK documents: first a tool call, then the answer.

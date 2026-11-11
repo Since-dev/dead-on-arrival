@@ -30,4 +30,20 @@
 | GPT-6.1 Terra | 22% | 1.7% | 25.4% | 10.3% | 7.2 |
 | GPT-6.1 Sol | 16.9% | 0% | 27.1% | 5.1% | 7.5 |
 
+## What the tools cost
+
+A model reads what the tools answer, so an answer with Since takes more tokens. Tokens are an answer's input and output over every round, as the provider bills them. Cost is those tokens at list prices on 2026-11-10.
+
+| Model | Tokens an answer, on its own | Tokens an answer, with Since | Cost an answer, on its own | Cost an answer, with Since |
+|---|---|---|---|---|
+| Gemini 4 Carbon | 577 | 33,721 | $0.0049 | $0.086 |
+| Claude Sonnet 5.5 | 1,434 | 23,154 | $0.013 | $0.062 |
+| Gemini 3.8 Flash | 1,061 | 20,980 | $0.0037 | $0.021 |
+| Claude Haiku 5.5 | 1,454 | 17,334 | $0.0007 | $0.0026 |
+| Claude Fable 5.2 | 2,315 | 51,518 | $0.089 | $0.56 |
+| Claude Opus 5.5 | 1,391 | 21,216 | $0.026 | $0.12 |
+| GPT-6 Luna | 924 | 18,454 | $0.0004 | $0.0027 |
+| GPT-6.1 Terra | 841 | 12,262 | $0.0039 | $0.017 |
+| GPT-6.1 Sol | 776 | 15,805 | $0.0071 | $0.041 |
+
 Every answer, every tool call and every finding with its source is in `answers/`; for a published run that folder is `answers-<day>.tar.gz` on the run's release. How it is judged, and how to run it again, is in the README.
