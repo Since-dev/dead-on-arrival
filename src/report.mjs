@@ -63,7 +63,7 @@ export function leaderboard(rows, run) {
     table("bare"),
     ...(both.length ? ["", "## The same models with Since's tools", "", "| Model | Dead or ending, on its own | Dead or ending, with Since | Known advisory, on its own | Known advisory, with Since | Tool calls an answer |", "|---|---|---|---|---|---|", ...both] : []),
     "",
-    "Every prompt, every answer and every finding with its source is in `answers/`. How it is judged, and how to run it again, is in the README.",
+    "Every answer, every tool call and every finding with its source is in `answers/`; for a published run that folder is `answers-<day>.tar.gz` on the run's release. How it is judged, and how to run it again, is in the README.",
     "",
   ].join("\n")
 }

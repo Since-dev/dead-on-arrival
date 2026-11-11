@@ -8,8 +8,13 @@
 //   vulnerable  it pins a version a published security advisory applies to
 //   behind      anything else the check settled: an end date further out, or a pinned version with breaking changes between it and today's
 //   clean       nothing of the above
+//
+// The check answers a page of findings at a time, the most severe first, and severity is not the order above: a version line that ended
+// can sit behind hundreds of breaking changes. So the judge reads every page of a block before it decides.
 
 export const DYING_DAYS = 90
+/** The most pages of one block the judge reads (500 findings a page). A block with more is marked `cut`, never passed off as read whole. */
+export const PAGES_MAX = 20
 
 /** A fence's info string to what the check reads it as: a snippet's language, or a manifest's file name. */
 const LANGUAGES = {
@@ -82,6 +87,40 @@ export function verdictOf(findings) {
   return findings.reduce((worst, finding) => (ORDER.indexOf(finding.verdict) > ORDER.indexOf(worst) ? finding.verdict : worst), "clean")
 }
 
+/** Every finding of one block: the check's pages, followed by their cursor to the end. */
+async function findingsOf(body, check) {
+  const found = []
+  let cursor = null
+  for (let page = 0; page < PAGES_MAX; page++) {
+    const answered = await check({ ...body, detail: "full", ...(cursor ? { cursor } : {}) })
+    found.push(...(answered.findings ?? []))
+    cursor = answered.nextCursor ?? null
+    if (!cursor) return { found, cut: false }
+  }
+  return { found, cut: true }
+}
+
+/**
+ * The findings as a run keeps them. One that ended, is ending or has an advisory is kept by itself. The breaking changes between a
+ * pinned version and today's are one finding a version: the first of them, with `changes` saying how many there are, since a version a
+ * few years old has hundreds.
+ */
+export function fold(findings) {
+  const kept = new Map()
+  const seen = new Set()
+  for (const finding of findings) {
+    const one = `${finding.kind}\0${finding.name}\0${finding.version}\0${finding.reason}`
+    // The same thing named in two blocks is one finding.
+    if (seen.has(one)) continue
+    seen.add(one)
+    const key = finding.verdict === "behind" && finding.version ? `${finding.kind}\0${finding.name}\0${finding.version}\0behind` : one
+    const first = kept.get(key)
+    if (first) first.changes++
+    else kept.set(key, { ...finding, changes: 1 })
+  }
+  return [...kept.values()]
+}
+
 /**
  * Checks one answer. `check(body)` posts to Since's check and returns the parsed answer, or throws; an answer with no block the check
  * can read is `unjudged`, never clean, and is left out of every rate.
@@ -90,18 +129,13 @@ export async function judge(answer, check) {
   const blocks = blocksOf(answer)
   if (!blocks.length) return { verdict: "unjudged", blocks: 0, findings: [] }
   const findings = []
+  let cut = false
   for (const block of blocks) {
     const body = block.kind === "manifest" ? { manifest: { path: block.path, content: block.content } } : { code: block.content, language: block.language }
-    const answered = await check({ ...body, detail: "full" })
-    for (const finding of answered.findings ?? []) if (finding.state === "affected") findings.push(findingOf(finding))
+    const read = await findingsOf(body, check)
+    cut ||= read.cut
+    for (const finding of read.found) if (finding.state === "affected") findings.push(findingOf(finding))
   }
-  // The same thing named in two blocks is one finding.
-  const seen = new Set()
-  const unique = findings.filter((finding) => {
-    const key = `${finding.kind}\0${finding.name}\0${finding.version}\0${finding.reason}`
-    if (seen.has(key)) return false
-    seen.add(key)
-    return true
-  })
-  return { verdict: verdictOf(unique), blocks: blocks.length, findings: unique }
+  const unique = fold(findings)
+  return { verdict: verdictOf(unique), blocks: blocks.length, findings: unique, ...(cut ? { cut: true } : {}) }
 }

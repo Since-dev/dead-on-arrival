@@ -1,8 +1,9 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
 
-import { blocksOf, findingOf, judge, verdictOf } from "./src/judge.mjs"
+import { blocksOf, findingOf, fold, judge, PAGES_MAX, verdictOf } from "./src/judge.mjs"
 import { leaderboard, siteData, summarize } from "./src/report.mjs"
+import { digest, TOOLS } from "./src/since.mjs"
 import { complete as claude } from "./src/providers/anthropic.mjs"
 import { complete as gemini } from "./src/providers/google.mjs"
 import { complete as openai } from "./src/providers/openai.mjs"
@@ -68,6 +69,62 @@ test("judges an answer by its worst settled finding, and never counts what the c
   assert.deepEqual(asked.map((body) => (body.code ? `code:${body.language}` : body.manifest.path)), ["code:python", "requirements.txt", "package.json"])
   assert.deepEqual(await judge("I cannot help with that.", check), { verdict: "unjudged", blocks: 0, findings: [] })
   assert.equal((await judge("```python\nprint(1)\n```", async () => ({ findings: [] }))).verdict, "clean")
+})
+
+test("the judge reads every page of a block, so a finding behind a page of breaking changes still decides the verdict", async () => {
+  const change = (index) => ({ surface: { kind: "package", name: "fastapi" }, version: "0.115.6", state: "affected", severity: "medium", daysLeft: null, reason: `change ${index}` })
+  const pages = {
+    first: { findings: [change(1), change(2)], nextCursor: "second" },
+    second: { findings: [change(3), { surface: { kind: "runtime", name: "python" }, version: "3.9", state: "affected", severity: "low", daysLeft: -376, effectiveDate: "2025-10-31", reason: "Python 3.9 ended" }], nextCursor: null },
+  }
+  const asked = []
+  const judged = await judge("requirements.txt\n```\nfastapi==0.115.6\n```", async (body) => { asked.push(body.cursor ?? null); return pages[body.cursor ?? "first"] })
+  assert.deepEqual(asked, [null, "second"])
+  assert.equal(judged.verdict, "dead")
+  // The breaking changes of one pinned version are one finding that says how many they are.
+  assert.deepEqual(judged.findings.map((finding) => [finding.name, finding.verdict, finding.changes]), [["fastapi", "behind", 3], ["python", "dead", 1]])
+  assert.equal("cut" in judged, false)
+  // A block with more pages than the judge reads is marked, never passed off as read whole.
+  let calls = 0
+  const endless = await judge("```python\nprint(1)\n```", async () => ({ findings: [change(++calls)], nextCursor: "more" }))
+  assert.deepEqual([calls, endless.cut, endless.findings[0].changes], [PAGES_MAX, true, PAGES_MAX])
+  // The same finding from two blocks is counted once; two advisories of one version stay two findings.
+  const advisory = (id) => ({ kind: "package", name: "p", version: "1.0.0", reason: `${id}: a flaw`, verdict: "vulnerable" })
+  assert.deepEqual(fold([advisory("GHSA-1"), advisory("GHSA-1"), advisory("GHSA-2")]).map((finding) => [finding.reason, finding.changes]), [["GHSA-1: a flaw", 1], ["GHSA-2: a flaw", 1]])
+})
+
+test("a check reads to a model as what ended or has an advisory, then one line for each version that is behind", () => {
+  const change = (name, version, reason) => ({ surface: { name }, version, state: "affected", reason, where: [{ line: 1 }] })
+  const text = digest({ findings: [
+    { surface: { name: "gpt-4o" }, version: null, state: "affected", reason: "shut down", effectiveDate: "2026-02-16", replacement: "gpt-6.1-sol" },
+    change("next", "14.2.3", "GHSA-1: a flaw"),
+    change("fastapi", "0.115.6", "first change"), change("fastapi", "0.115.6", "second change"), change("uvicorn", "0.34.0", "a change"),
+    { surface: { name: "requests" }, version: null, state: "needs_review", reason: "no version given" },
+  ], unresolved: [{ name: "pypi:fastapi@0.115.6", reason: "Since is reading what changed in 101 releases" }, { name: "x", reason: "not found" }], nextCursor: null })
+  const read = JSON.parse(text)
+  assert.deepEqual(read.findings.map((finding) => [finding.name, finding.date, finding.replacement, finding.state]),
+    [["gpt-4o", "2026-02-16", "gpt-6.1-sol", "affected"], ["next", null, null, "affected"], ["requests", null, null, "needs_review"]])
+  assert.deepEqual(read.behind, [{ name: "fastapi", version: "0.115.6", breakingChangesAfterIt: 2, first: "first change", line: 1 }, { name: "uvicorn", version: "0.34.0", breakingChangesAfterIt: 1, first: "a change", line: 1 }])
+  assert.deepEqual([read.stillReading, "notAllRead" in read], [["pypi:fastapi@0.115.6"], false])
+})
+
+test("whats_changed asks about one thing a call: a package with the version known, a surface, or a provider's current models", async () => {
+  const asked = []
+  const fetched = globalThis.fetch
+  process.env.SINCE_DEV_KEY ??= "test"
+  globalThis.fetch = async (url) => {
+    asked.push(new URL(url).search)
+    return { status: 200, headers: new Headers(), json: async () => ({ package: { name: "fastapi", ecosystem: "pypi", latest: "0.162.4", releasesBehind: 148, purl: "pkg:pypi/fastapi" }, reading: { retryAfterSec: 60 }, changes: [{ title: "a change", effectiveDate: null }] }) }
+  }
+  try {
+    const tool = TOOLS.find((entry) => entry.name === "whats_changed")
+    const read = JSON.parse(await tool.run({ package: "pypi:fastapi", since: "0.115.6", provider: "openai" }))
+    assert.deepEqual(read.package, { name: "fastapi", registry: "pypi", latest: "0.162.4", releasesBehind: 148 })
+    assert.equal(typeof read.note, "string")
+    await tool.run({ surface: "gpt-5", provider: "openai" })
+    await tool.run({ provider: "openai" })
+    assert.deepEqual(asked, ["?package=pypi%3Afastapi&since=0.115.6&limit=20", "?surface=gpt-5&limit=20", "?provider=openai&current=true&limit=20"])
+  } finally { globalThis.fetch = fetched }
 })
 
 test("the leaderboard's rates are over judged answers only, bare first, then each model beside itself with Since", () => {
