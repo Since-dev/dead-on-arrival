@@ -4,8 +4,11 @@ import { LAST_ROUND } from "./last-round.mjs"
 
 let shared
 
+/** Gemini's own web search (Grounding with Google Search). Google runs the searches inside the request. */
+export const WEB_SEARCH = { googleSearch: {} }
+
 /** Answers `prompt`; the same contract as the other providers (see anthropic.mjs). */
-export async function complete({ model, system, prompt, tools = [], maxTokens = 16_000, maxTurns = 8, sdk }) {
+export async function complete({ model, system, prompt, tools = [], webSearch = false, maxTokens = 16_000, maxTurns = 8, sdk }) {
   // `sdk` is a client to use in its place: the tests pass one that answers from a script. The maker's SDK is loaded only when a real
   // client is needed, so the tests run with nothing installed.
   const ai = sdk ?? (shared ??= new (await import("@google/genai")).GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY }))
@@ -14,18 +17,26 @@ export async function complete({ model, system, prompt, tools = [], maxTokens = 
     systemInstruction: system,
     maxOutputTokens: maxTokens,
     ...(tools.length ? { tools: [{ functionDeclarations: tools.map(({ name, description, input_schema }) => ({ name, description, parametersJsonSchema: input_schema })) }] } : {}),
+    ...(webSearch ? { tools: [WEB_SEARCH] } : {}),
   }
-  const usage = { inputTokens: 0, outputTokens: 0 }
+  const usage = { inputTokens: 0, outputTokens: 0, searches: 0 }
   const calls = []
   for (let turn = 0; turn < maxTurns; turn++) {
     // In the last round the model has no tools (last-round.mjs): they are left out of the request. Switched off alone (`mode: NONE`),
     // or left out with nothing said, Gemini still answered with another call in the middle of a run of calls (measured, November 2026).
     const last = tools.length > 0 && turn === maxTurns - 1
     const response = await ai.models.generateContent({ model, contents, config: last ? { systemInstruction: system, maxOutputTokens: maxTokens } : config })
-    usage.inputTokens += response.usageMetadata?.promptTokenCount ?? 0
+    // What a search read comes back as tool-use prompt tokens, billed as input.
+    usage.inputTokens += (response.usageMetadata?.promptTokenCount ?? 0) + (response.usageMetadata?.toolUsePromptTokenCount ?? 0)
     usage.outputTokens += (response.usageMetadata?.candidatesTokenCount ?? 0) + (response.usageMetadata?.thoughtsTokenCount ?? 0)
-    const asked = response.functionCalls ?? []
     const candidate = response.candidates?.[0]
+    // Google bills each query it ran; the pages the answer was grounded in are listed beside them.
+    const grounding = candidate?.groundingMetadata
+    const queries = grounding?.webSearchQueries ?? []
+    usage.searches += queries.length
+    const pages = (grounding?.groundingChunks ?? []).map((chunk) => chunk.web?.title ?? chunk.web?.uri).filter(Boolean).join("\n").slice(0, 2_000)
+    for (const query of queries) calls.push({ name: "web_search", input: { query }, output: pages })
+    const asked = response.functionCalls ?? []
     if (!asked.length || !candidate?.content) return { text: response.text ?? "", calls, usage, stop: candidate?.finishReason ?? null }
     if (last) break
     // The model's turn goes back whole, as it came: its thought signatures ride on its parts.

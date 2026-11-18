@@ -1,6 +1,10 @@
-// The run: every model answers every prompt twice, bare and with Since's tools, and the judge reads each answer.
+// The run: every model answers every prompt four ways, and the judge reads each answer:
+//   bare         the prompt alone
+//   search       with the model's own web search, which it decides itself whether to use
+//   search-told  the same, plus one line telling it to search for what is current
+//   since        with Since's two tools and Since's rule
 //
-//   node src/run.mjs [--models id,id] [--prompts 5 | id,id] [--modes bare,since] [--max-usd 50] [--out results/2026-11-24] [--concurrency 4]
+//   node src/run.mjs [--models id,id] [--prompts 5 | id,id] [--modes bare,search,search-told,since] [--max-usd 50] [--out results/2026-11-24] [--concurrency 4]
 //   node src/run.mjs --rejudge --out results/2026-11-24     the judge reads the stored answers again; no model is asked
 //
 // Needs SINCE_DEV_KEY (the judge and the tools) and each provider's own key (ANTHROPIC_API_KEY, OPENAI_API_KEY, GEMINI_API_KEY). A run can be stopped and started
@@ -23,6 +27,18 @@ const KEYS = { anthropic: "ANTHROPIC_API_KEY", openai: "OPENAI_API_KEY", google:
 export const SYSTEM = "You are a coding assistant. Answer with the complete code in fenced code blocks, each with its language. Put a manifest (package.json, requirements.txt) in its own block with its file name on the line before it. Keep explanations to a few lines."
 /** What the "with Since" run adds: the tools, and the rule Since's own setup gives a coding agent. */
 export const SINCE_RULE = "Your knowledge of packages, AI models and APIs stops at your training. Before you write a model ID or pin a version, read what is current with whats_changed, and check the code you are about to give with check_code. Fix what the check finds before you answer."
+/** What the "told to search" run adds to the model's own web search: the same rule, said for search, so the two compare fairly. */
+export const SEARCH_RULE = "Your knowledge of packages, AI models and APIs stops at your training. Before you write a model ID or pin a version, search the web for what is current: whether it is still supported, and its latest version. Use what you find in your answer."
+
+export const MODES = ["bare", "search", "search-told", "since"]
+/** What each mode asks with: its system line, Since's tools, and the model's own web search. */
+export function askedWith(mode) {
+  if (mode === "since") return { system: `${SYSTEM}\n\n${SINCE_RULE}`, tools: TOOLS, webSearch: false }
+  if (mode === "search") return { system: SYSTEM, tools: [], webSearch: true }
+  if (mode === "search-told") return { system: `${SYSTEM}\n\n${SEARCH_RULE}`, tools: [], webSearch: true }
+  if (mode === "bare") return { system: SYSTEM, tools: [], webSearch: false }
+  throw new Error(`No mode is named ${mode}: the modes are ${MODES.join(", ")}.`)
+}
 
 function args(argv) {
   const out = {}
@@ -35,11 +51,13 @@ async function main() {
   const today = new Date().toISOString().slice(0, 10)
   const out = join(ROOT, options.out ?? `results/${today}`)
   const maxUsd = Number(options["max-usd"] ?? 50)
-  const modes = (options.modes ?? "bare,since").split(",")
+  const modes = (options.modes ?? MODES.join(",")).split(",")
+  for (const mode of modes) askedWith(mode)
   const allPrompts = JSON.parse(readFileSync(join(ROOT, "prompts.json"), "utf8"))
   const wanted = options.prompts
   const prompts = !wanted ? allPrompts : /^\d+$/.test(wanted) ? spread(allPrompts, Number(wanted)) : allPrompts.filter((prompt) => wanted.split(",").includes(prompt.id))
-  const listed = JSON.parse(readFileSync(join(ROOT, "models.json"), "utf8")).models
+  const catalog = JSON.parse(readFileSync(join(ROOT, "models.json"), "utf8"))
+  const listed = catalog.models
   const models = listed.filter((model) => (!options.models || options.models.split(",").includes(model.id)) && PROVIDERS[model.provider] && (options.rejudge || process.env[KEYS[model.provider]]))
   if (!models.length) throw new Error("No model to run: set a provider's key (ANTHROPIC_API_KEY, OPENAI_API_KEY or GEMINI_API_KEY) and name models that models.json lists.")
   if (!prompts.length) throw new Error("No prompt matched --prompts.")
@@ -56,8 +74,9 @@ async function main() {
     const started = Date.now()
     let record
     try {
-      const answer = await complete({ model: job.model.id, prompt: job.prompt.prompt, system: job.mode === "since" ? `${SYSTEM}\n\n${SINCE_RULE}` : SYSTEM, tools: job.mode === "since" ? TOOLS : [] })
-      const usd = (answer.usage.inputTokens * job.model.guardInput + answer.usage.outputTokens * job.model.guardOutput) / 1_000_000
+      const answer = await complete({ model: job.model.id, prompt: job.prompt.prompt, ...askedWith(job.mode) })
+      // A search is billed by itself, besides the tokens its pages add.
+      const usd = (answer.usage.inputTokens * job.model.guardInput + answer.usage.outputTokens * job.model.guardOutput) / 1_000_000 + (answer.usage.searches ?? 0) * (catalog.guardSearch?.[job.model.provider] ?? 0)
       spent += usd
       const judged = await judge(answer.text, check)
       record = { model: job.model.id, mode: job.mode, prompt: job.prompt.id, area: job.prompt.area, askedAt: new Date(started).toISOString(), seconds: Math.round((Date.now() - started) / 100) / 10,
@@ -74,7 +93,7 @@ async function main() {
   let next = 0
   await Promise.all(Array.from({ length: concurrency }, async () => { while (next < jobs.length && !stopped) await one(jobs[next++]) }))
   mkdirSync(out, { recursive: true })
-  writeFileSync(join(out, "run.json"), `${JSON.stringify({ day: today, sinceApi: process.env.SINCE_API_URL ?? "https://api.since.dev", models: models.map((model) => model.id), modes, prompts: prompts.map((prompt) => prompt.id), system: SYSTEM, sinceRule: SINCE_RULE }, null, 2)}\n`)
+  writeFileSync(join(out, "run.json"), `${JSON.stringify({ day: today, sinceApi: process.env.SINCE_API_URL ?? "https://api.since.dev", models: models.map((model) => model.id), modes, prompts: prompts.map((prompt) => prompt.id), system: SYSTEM, sinceRule: SINCE_RULE, ...(modes.some((mode) => mode.startsWith("search")) ? { searchRule: SEARCH_RULE } : {}) }, null, 2)}\n`)
   process.stderr.write(`${done} answered, ${skipped} already there${stopped ? `, stopped at the $${maxUsd} guard with ${jobs.length - done - skipped} left` : ""}. Now: node src/report.mjs ${options.out ?? `results/${today}`}\n`)
 }
 
