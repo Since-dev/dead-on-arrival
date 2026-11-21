@@ -29,18 +29,22 @@ export const usd = (value) => (value === null || value === undefined ? "n/a" : `
  *
  * A row also says what an answer took: its tokens, every round of a tool conversation counted as the provider bills it, and with
  * `prices` (each model's list price a million tokens and, for the search arms, a search: `{ id: { input, output, search } }`) what that cost.
- * `searched` is how many answers made at least one web search, and `searchRate` its share of the answers asked.
+ * `searched` is how many answers made at least one web search, and `searchRate` its share of the answers asked. `sources` counts the distinct
+ * sources an answer's searches returned: pages for Claude and OpenAI, and for Gemini the sites its search found, since Google names a site,
+ * not a page (`sourcesPerAnswer`).
  */
 export function summarize(answers, prices = {}) {
   const rows = new Map()
   for (const answer of answers) {
     const key = `${answer.model}\0${answer.mode}`
-    const row = rows.get(key) ?? { model: answer.model, mode: answer.mode, answers: 0, judged: 0, dead: 0, dying: 0, vulnerable: 0, behind: 0, clean: 0, unjudged: 0, errors: 0, toolCalls: 0, searched: 0, searches: 0, inputTokens: 0, outputTokens: 0, asked: 0 }
+    const row = rows.get(key) ?? { model: answer.model, mode: answer.mode, answers: 0, judged: 0, dead: 0, dying: 0, vulnerable: 0, behind: 0, clean: 0, unjudged: 0, errors: 0, toolCalls: 0, searched: 0, searches: 0, sources: 0, inputTokens: 0, outputTokens: 0, asked: 0 }
     row.answers++
     if (answer.verdict === "error") row.errors++
     else if (answer.verdict === "unjudged") row.unjudged++
     else { row.judged++; row[answer.verdict]++ }
     row.toolCalls += answer.toolCalls?.length ?? 0
+    row.sources += new Set((answer.toolCalls ?? []).filter((call) => call.name === "web_search")
+      .flatMap((call) => String(call.output ?? "").split("\n").map((line) => line.trim()).filter(Boolean))).size
     if (answer.usage) { row.asked++; row.inputTokens += answer.usage.inputTokens ?? 0; row.outputTokens += answer.usage.outputTokens ?? 0; row.searches += answer.usage.searches ?? 0; if (answer.usage.searches > 0) row.searched++ }
     rows.set(key, row)
   }
@@ -48,6 +52,7 @@ export function summarize(answers, prices = {}) {
     const price = prices[row.model]
     return { ...row, deadRate: share(row.dead, row.judged), deadOrDyingRate: share(row.dead + row.dying, row.judged), vulnerableRate: share(row.vulnerable, row.judged),
       searchRate: share(row.searched, asked), searchesPerAnswer: asked ? Math.round((row.searches / asked) * 10) / 10 : null,
+      sourcesPerAnswer: asked ? Math.round((row.sources / asked) * 10) / 10 : null,
       tokensPerAnswer: asked ? Math.round((row.inputTokens + row.outputTokens) / asked) : null,
       usdPerAnswer: asked && price ? Math.round((((row.inputTokens * price.input + row.outputTokens * price.output) / 1_000_000 + row.searches * (price.search ?? 0)) / asked) * 100_000) / 100_000 : null }
   })
@@ -152,8 +157,8 @@ export function siteData(rows, run) {
     pricedOn: run.pricedOn ?? null,
     prompts: run.prompts.length,
     models: ids.map((id) => ({ id, name: names.get(id)?.name ?? id, provider: names.get(id)?.provider ?? null })),
-    rows: rows.map(({ model, mode, answers, judged, dead, dying, vulnerable, behind, clean, unjudged, errors, toolCalls, searched, searches, deadRate, deadOrDyingRate, vulnerableRate, searchRate, tokensPerAnswer, usdPerAnswer }) =>
-      ({ model, mode, answers, judged, dead, dying, vulnerable, behind, clean, unjudged, errors, toolCalls, searched, searches, deadRate, deadOrDyingRate, vulnerableRate, searchRate, tokensPerAnswer, usdPerAnswer })),
+    rows: rows.map(({ model, mode, answers, judged, dead, dying, vulnerable, behind, clean, unjudged, errors, toolCalls, searched, searches, deadRate, deadOrDyingRate, vulnerableRate, searchRate, searchesPerAnswer, sourcesPerAnswer, tokensPerAnswer, usdPerAnswer }) =>
+      ({ model, mode, answers, judged, dead, dying, vulnerable, behind, clean, unjudged, errors, toolCalls, searched, searches, deadRate, deadOrDyingRate, vulnerableRate, searchRate, searchesPerAnswer, sourcesPerAnswer, tokensPerAnswer, usdPerAnswer })),
   }
 }
 

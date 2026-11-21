@@ -34,8 +34,9 @@ const SHELLS = ["bash", "sh", "shell", "zsh", "console", "terminal", "powershell
  */
 export function blocksOf(answer) {
   const blocks = []
-  // The line before a fence is kept: an answer often names a manifest there. A fence may also open the answer.
-  const fence = /(?:^|\n)(?:([^\n`]*)\n)?```([^\n`]*)\n([\s\S]*?)\n```(?=\n|$)/g
+  // The line before a fence is kept: an answer often names a manifest there, often as inline code ("Create `go.mod`:"; Nov 18, 111 such
+  // fences were read unnamed and go.mod as Go). Any line but a fence. A fence may also open the answer.
+  const fence = /(?:^|\n)(?:((?:(?!```)[^\n])*)\n)?```([^\n`]*)\n([\s\S]*?)\n```(?=\n|$)/g
   for (const match of String(answer).matchAll(fence)) {
     const before = (match[1] ?? "").trim()
     const info = match[2].trim()

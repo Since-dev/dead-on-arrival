@@ -42,6 +42,17 @@ test("reads an answer's code and manifests, and nothing else", () => {
   assert.deepEqual(blocksOf("```ts\n// package.json\n{}\n```").map((block) => block.path), ["package.json"])
 })
 
+test("names a manifest on a line before its fence that holds inline code (Nov 18: 111 such fences, go.mod read as Go)", () => {
+  // gpt-6-luna, search, openai-09: a go.mod fenced as `go`, named in bold code on the line before it.
+  const goMod = "**`main.go`**\n```go\nfunc main() {\n\tfmt.Println(answer)\n}\n```\n\n**`go.mod`**\n```go\nmodule example.com/chat\n\ngo 1.22\n```\n\nSet `OPENAI_API_KEY`, then run `go run .`."
+  assert.deepEqual(blocksOf(goMod).map((block) => [block.kind, block.language ?? block.path]), [["code", "go"], ["manifest", "go.mod"]])
+  // gpt-6-luna, bare, claude-03, and a package.json with no dependency field the fallback would know.
+  const both = "before running it.\n\n`requirements.txt`\n```text\nanthropic\n```\n\nCreate `package.json`:\n```json\n{ \"type\": \"module\" }\n```"
+  assert.deepEqual(blocksOf(both).map((block) => block.path), ["requirements.txt", "package.json"])
+  // A closing fence on the line before is never taken as the name.
+  assert.deepEqual(blocksOf("```python\nprint(1)\n```\n```go\npackage main\n```").map((block) => block.language), ["python", "go"])
+})
+
 test("a finding is dead once its date has passed, dying within 90 days, and affected with no date", () => {
   const of = (daysLeft) => findingOf({ surface: { kind: "model", name: "m" }, state: "affected", daysLeft, effectiveDate: daysLeft === null ? null : "2026-01-01" }).verdict
   assert.deepEqual([of(-1), of(0), of(90), of(91), of(null)], ["dead", "dying", "dying", "behind", "behind"])
@@ -148,7 +159,18 @@ test("the leaderboard's rates are over judged answers only, bare first, then eac
   const site = siteData(rows, { day: "2026-11-24", prompts: ["p1", "p2"], modelNames: [{ id: "a", name: "Model A", provider: "x" }] })
   assert.deepEqual([site.day, site.prompts, site.models], ["2026-11-24", 2, [{ id: "a", name: "Model A", provider: "x" }, { id: "b", name: "b", provider: null }]])
   assert.deepEqual(site.rows.find((entry) => entry.model === "a" && entry.mode === "bare"),
-    { model: "a", mode: "bare", answers: 4, judged: 2, dead: 1, dying: 0, vulnerable: 0, behind: 0, clean: 1, unjudged: 1, errors: 1, toolCalls: 0, searched: 0, searches: 0, deadRate: 50, deadOrDyingRate: 50, vulnerableRate: 0, searchRate: null, tokensPerAnswer: null, usdPerAnswer: null })
+    { model: "a", mode: "bare", answers: 4, judged: 2, dead: 1, dying: 0, vulnerable: 0, behind: 0, clean: 1, unjudged: 1, errors: 1, toolCalls: 0, searched: 0, searches: 0, deadRate: 50, deadOrDyingRate: 50, vulnerableRate: 0, searchRate: null, searchesPerAnswer: null, sourcesPerAnswer: null, tokensPerAnswer: null, usdPerAnswer: null })
+})
+
+test("counts each answer's distinct search sources: pages, or for Gemini the sites its search found", () => {
+  const search = (output) => ({ name: "web_search", input: { query: "q" }, output })
+  const answers = [
+    // gemini-4-carbon, search-told, openai-01 (Nov 18): four searches that name one site.
+    { model: "g", mode: "search-told", verdict: "clean", usage: { inputTokens: 1, outputTokens: 1, searches: 4 }, toolCalls: [search("openai.com\nopenai.com"), search("openai.com"), search(""), search("platform.openai.com")] },
+    { model: "g", mode: "search-told", verdict: "clean", usage: { inputTokens: 1, outputTokens: 1, searches: 0 }, toolCalls: [] },
+  ]
+  const [row] = summarize(answers)
+  assert.deepEqual([row.searchRate, row.searchesPerAnswer, row.sourcesPerAnswer], [50, 2, 1])
 })
 
 test("a row says what an answer took in tokens, and at list prices what it cost, with Since and without", () => {

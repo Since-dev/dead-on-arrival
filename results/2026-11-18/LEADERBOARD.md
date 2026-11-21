@@ -6,15 +6,15 @@
 
 | Model | Dead on arrival | Dead, or ends within 90 days | Pins a version with a known advisory | Answers judged | Not judged |
 |---|---|---|---|---|---|
+| Gemini 3.8 Flash | 42.4% | 54.2% | 18.6% | 59 | 1 |
 | Gemini 4 Carbon | 42.4% | 52.5% | 20.3% | 59 | 1 |
-| Gemini 3.8 Flash | 40.7% | 52.5% | 18.6% | 59 | 1 |
 | Claude Sonnet 5.5 | 23.7% | 45.8% | 22% | 59 | 1 |
 | Claude Haiku 5.5 | 22% | 49.2% | 23.7% | 59 | 1 |
 | GPT-6 Luna | 22% | 35.6% | 22% | 59 | 1 |
 | Claude Opus 5.5 | 20.3% | 45.8% | 23.7% | 59 | 1 |
 | Claude Fable 5.2 | 18.6% | 44.1% | 20.3% | 59 | 1 |
-| GPT-6.1 Terra | 11.9% | 35.6% | 23.7% | 59 | 1 |
-| GPT-6.1 Sol | 8.5% | 25.4% | 25.4% | 59 | 1 |
+| GPT-6.1 Terra | 11.9% | 37.3% | 23.7% | 59 | 1 |
+| GPT-6.1 Sol | 6.8% | 23.7% | 25.4% | 59 | 1 |
 
 ## Memory, web search and Since
 
@@ -24,29 +24,29 @@ Each model answered the same prompts four ways: on its own; with its own web sea
 
 | Model | On its own | Search allowed | Told to search | With Since |
 |---|---|---|---|---|
-| Gemini 3.8 Flash | 40.7% | 39% | 20.3% | 0% |
+| Gemini 3.8 Flash | 42.4% | 39% | 20.3% | 0% |
 | Claude Sonnet 5.5 | 23.7% | 13.6% | 0% | 0% |
 | Claude Haiku 5.5 | 22% | 11.9% | 3.4% | 0% |
 | Claude Opus 5.5 | 20.3% | 10.2% | 5.1% | 0% |
 | Claude Fable 5.2 | 18.6% | 8.5% | 0% | 0% |
 | Gemini 4 Carbon | 42.4% | 8.5% | 0% | 0% |
-| GPT-6 Luna | 22% | 1.7% | 0% | 0% |
+| GPT-6 Luna | 22% | 3.4% | 0% | 0% |
 | GPT-6.1 Terra | 11.9% | 1.7% | 0% | 0% |
-| GPT-6.1 Sol | 8.5% | 0% | 0% | 0% |
+| GPT-6.1 Sol | 6.8% | 0% | 0% | 0% |
 
 ### Dead, or ends within 90 days
 
 | Model | On its own | Search allowed | Told to search | With Since |
 |---|---|---|---|---|
-| Gemini 3.8 Flash | 52.5% | 50.8% | 32.2% | 1.7% |
+| Gemini 3.8 Flash | 54.2% | 50.8% | 32.2% | 1.7% |
 | Claude Sonnet 5.5 | 45.8% | 40.7% | 1.7% | 1.7% |
 | Claude Haiku 5.5 | 49.2% | 44.1% | 5.1% | 1.7% |
 | Claude Opus 5.5 | 45.8% | 32.2% | 5.1% | 1.7% |
 | Claude Fable 5.2 | 44.1% | 23.7% | 0% | 0% |
 | Gemini 4 Carbon | 52.5% | 10.2% | 0% | 0% |
-| GPT-6 Luna | 35.6% | 5.1% | 1.7% | 1.7% |
-| GPT-6.1 Terra | 35.6% | 5.1% | 1.7% | 0% |
-| GPT-6.1 Sol | 25.4% | 6.8% | 1.7% | 0% |
+| GPT-6 Luna | 35.6% | 6.8% | 1.7% | 1.7% |
+| GPT-6.1 Terra | 37.3% | 5.1% | 1.7% | 0% |
+| GPT-6.1 Sol | 23.7% | 6.8% | 1.7% | 0% |
 
 ### How often each model searched
 
@@ -68,15 +68,15 @@ Searched is the share of answers that made at least one web search.
 
 | Model | Dead or ending, on its own | Dead or ending, with Since | Known advisory, on its own | Known advisory, with Since | Tool calls an answer |
 |---|---|---|---|---|---|
+| Gemini 3.8 Flash | 54.2% | 1.7% | 18.6% | 0% | 7.2 |
 | Gemini 4 Carbon | 52.5% | 0% | 20.3% | 0% | 11.1 |
-| Gemini 3.8 Flash | 52.5% | 1.7% | 18.6% | 0% | 7.2 |
 | Claude Sonnet 5.5 | 45.8% | 1.7% | 22% | 1.7% | 6.0 |
 | Claude Haiku 5.5 | 49.2% | 1.7% | 23.7% | 1.7% | 5.7 |
 | GPT-6 Luna | 35.6% | 1.7% | 22% | 0% | 6.5 |
 | Claude Opus 5.5 | 45.8% | 1.7% | 23.7% | 1.7% | 7.0 |
 | Claude Fable 5.2 | 44.1% | 0% | 20.3% | 1.7% | 9.1 |
-| GPT-6.1 Terra | 35.6% | 0% | 23.7% | 1.7% | 6.3 |
-| GPT-6.1 Sol | 25.4% | 0% | 25.4% | 1.7% | 6.0 |
+| GPT-6.1 Terra | 37.3% | 0% | 23.7% | 1.7% | 6.3 |
+| GPT-6.1 Sol | 23.7% | 0% | 25.4% | 1.7% | 6.0 |
 
 ## What the tools cost
 
@@ -84,8 +84,8 @@ A model reads what the tools answer, so an answer with Since takes more tokens. 
 
 | Model | Tokens an answer, on its own | Tokens an answer, with Since | Cost an answer, on its own | Cost an answer, with Since |
 |---|---|---|---|---|
-| Gemini 4 Carbon | 612 | 27,695 | $0.0052 | $0.071 |
 | Gemini 3.8 Flash | 1,084 | 24,535 | $0.0038 | $0.024 |
+| Gemini 4 Carbon | 612 | 27,695 | $0.0052 | $0.071 |
 | Claude Sonnet 5.5 | 1,377 | 18,423 | $0.013 | $0.049 |
 | Claude Haiku 5.5 | 1,472 | 20,675 | $0.0007 | $0.0028 |
 | GPT-6 Luna | 931 | 18,841 | $0.0004 | $0.0026 |
